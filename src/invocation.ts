@@ -14,9 +14,10 @@ import { verifyKey, InteractionType, InteractionResponseType } from 'discord-int
 const { PUBLIC_KEY = '' } = process.env;
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  console.log(JSON.stringify(event));
   const {
     body: rawBody = '',
-    headers: { 'X-Signature-Ed25519': signature = '', 'X-Signature-Timestamp': timestamp = '' },
+    headers: { 'x-signature-ed25519': signature = '', 'x-signature-timestamp': timestamp = '' },
   } = event;
   const isVerified = verifyKey(rawBody ?? '', signature, timestamp, PUBLIC_KEY);
   if (rawBody && isVerified) {
@@ -26,6 +27,15 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         statusCode: 200,
         body: JSON.stringify({
           type: InteractionResponseType.PONG,
+        }),
+      };
+    }
+    if (body.type === InteractionType.APPLICATION_COMMAND) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: { content: 'Well hello there' },
         }),
       };
     }

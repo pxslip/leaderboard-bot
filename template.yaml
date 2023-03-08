@@ -1,28 +1,33 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  leaderboard-bot
-
-  Sample SAM Template for leaderboard-bot
+Description: A discord leaderboard/submission bot
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 3
 
+Parameters:
+  ClientSecret:
+    Type: String
+    Default: unset
+  DiscordToken:
+    Type: String
+    Default: unset
+
 Resources:
   InvocationFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: src/
+      CodeUri: ./
       Handler: invocation.handler
       Runtime: nodejs18.x
       Environment:
         Variables:
-          CLIENT_ID:
-          CLIENT_SECRET:
-          DISCORD_TOKEN:
-          PUBLIC_KEY:
+          CLIENT_ID: '1080335424905547867'
+          PUBLIC_KEY: 019df6dfc4e2f506284fb0e4c5474808d3e9cc16c2e3a6491359eb85d49f82c6
+          CLIENT_SECRET: !Ref ClientSecret
+          DISCORD_TOKEN: !Ref DiscordToken
       Events:
         Invocation:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -36,15 +41,27 @@ Resources:
         Target: 'es2020'
         Sourcemap: true
         EntryPoints:
-          - invocation.ts
-
+          - src/invocation.ts
+  SubmissionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: 'LeaderboardBot_Leaderboards'
+      AttributeDefinitions:
+        - AttributeName: LeaderboardId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: LeaderboardId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   InvocationApi:
     Description: 'API Gateway endpoint URL for Prod stage for Hello World function'
-    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/'
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/invocations/'
   InvocationFunction:
     Description: 'Hello World Lambda Function ARN'
     Value: !GetAtt InvocationFunction.Arn
