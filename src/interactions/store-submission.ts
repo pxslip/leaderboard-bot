@@ -47,7 +47,6 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 					type: InteractionResponseType.ChannelMessageWithSource,
 					data: {
 						content: `Submission received, a mod will review and confirm your entry`,
-						flags: MessageFlags.Ephemeral,
 					},
 				} as APIInteractionResponseChannelMessageWithSource),
 			};

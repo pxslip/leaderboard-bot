@@ -1,7 +1,7 @@
-import { AttributeValue, QueryCommand } from '@aws-sdk/client-dynamodb';
-import dbClient from './db-client.js';
+import { AttributeValue, GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
+import dbClient, { TABLE_NAME } from './db-client.js';
 
-interface Leaderboard {
+export interface Leaderboard {
 	LeaderboardId: AttributeValue.NMember;
 	Timestamp: AttributeValue.NMember;
 	ChannelId: AttributeValue.NMember;
@@ -31,7 +31,7 @@ export default async function getLeaderboard(
 ): Promise<Leaderboard> {
 	const leaderboards = await dbClient.send(
 		new QueryCommand({
-			TableName: process.env.DB_TABLE_NAME,
+			TableName: TABLE_NAME,
 			IndexName: 'guildAndChannel',
 			KeyConditionExpression: 'GuildAndChannelId = :guildAndChannelId',
 			ExpressionAttributeValues: { ':guildAndChannelId': { S: `${guildId.toString()}_${channelId.toString()}` } },
@@ -45,4 +45,21 @@ export default async function getLeaderboard(
 		return leaderboard as unknown as Leaderboard; // TODO: is there a better way to type this?
 	}
 	throw new Error(`Leaderboard for guild: ${guildId} and channel: ${channelId} not found`);
+}
+
+export async function getLeaderboardById(
+	leaderboardId: string,
+	{ ProjectionExpression = 'LeaderboardId, Name, Submissions, Entries' }: GetLeaderboardOptions,
+) {
+	const response = await dbClient.send(
+		new GetItemCommand({
+			TableName: TABLE_NAME,
+			Key: { LeaderboardId: { N: leaderboardId } },
+			ProjectionExpression,
+		}),
+	);
+	if (response.$metadata.httpStatusCode === 200) {
+		return response.Item as unknown as Leaderboard;
+	}
+	throw new Error('The leaderboard specified was not found');
 }

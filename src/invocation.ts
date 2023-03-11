@@ -53,8 +53,17 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 				}
 			} else if (body.type === InteractionType.MessageComponent) {
 				console.log(`Executing handler for ${body.data.custom_id}`);
+				let response;
 				if (body.data.custom_id.startsWith('confirm')) {
+					response = await interactions.confirmSubmission(body);
 				} else if (body.data.custom_id.startsWith('reject')) {
+					response = await interactions.rejectSubmission(body);
+				} else if (body.data.custom_id.startsWith('delete')) {
+					response = await interactions.deleteSubmission(body);
+				}
+				console.log(JSON.stringify(response));
+				if (response) {
+					return response;
 				}
 			}
 		}

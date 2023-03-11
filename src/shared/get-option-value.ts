@@ -11,6 +11,6 @@ export default function getOptionValue<T extends string | number | boolean>(
 	if (interaction.data.type === ApplicationCommandType.ChatInput) {
 		return (
 			interaction.data.options?.find((opt) => opt.name === option) as APIApplicationCommandInteractionDataBasicOption
-		).value as T;
+		)?.value as T;
 	}
 }
