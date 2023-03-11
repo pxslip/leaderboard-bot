@@ -1,5 +1,5 @@
-import type { ApplicationCommandData, ApplicationCommandDefinition } from '../types/discord.d.js';
 import axios, { AxiosRequestConfig, type AxiosInstance } from 'axios';
+import { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 export class DiscordApi {
 	#baseUrl = 'https://discord.com/api/v10';
@@ -9,12 +9,16 @@ export class DiscordApi {
 		this.#token = token;
 		this.#axios = axios.create({
 			baseURL: this.#baseUrl,
-			headers: {
-				Authorization: `Bot ${this.#token}`,
-				'Content-Type': 'application/json; charset=UTF-8',
-				'User-Agent': 'DiscordBot (https://github.com/pxslip/leaderboard-bot, 1.0.0)',
-			},
+			headers: DiscordApi.getHeaders(this.#token),
 		});
+	}
+
+	static getHeaders(token: string) {
+		return {
+			Authorization: `Bot ${token}`,
+			'Content-Type': 'application/json; charset=UTF-8',
+			'User-Agent': 'DiscordBot (https://github.com/pxslip/leaderboard-bot, 1.0.0)',
+		};
 	}
 
 	typeReplacer(key: string, value: unknown) {
@@ -33,7 +37,6 @@ export class DiscordApi {
 			request.data = data;
 		}
 		const response = await this.#axios.request(request);
-		console.log(JSON.stringify(response.data));
 		return response;
 	}
 
@@ -45,11 +48,11 @@ export class DiscordApi {
 		return this.#query(`applications/${appId}/commands`);
 	}
 
-	async createGuildCommand(appId: string, guildId: string, command: ApplicationCommandDefinition) {
+	async createGuildCommand(appId: string, guildId: string, command: RESTPostAPIApplicationCommandsJSONBody) {
 		return this.#query(`applications/${appId}/guilds/${guildId}/commands`, command, 'POST');
 	}
 
-	async createGlobalCommand(appId: string, command: ApplicationCommandDefinition) {
+	async createGlobalCommand(appId: string, command: RESTPostAPIApplicationCommandsJSONBody) {
 		return this.#query(`applications/${appId}/commands`, command, 'POST');
 	}
 

@@ -9,4 +9,4 @@ region = "us-east-1"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
-parameter_overrides = "ClientSecret=\"DPyicB72FT3eWHt-_RKJaLyT794mkNKS\" DiscordToken=\"MTA4MDMzNTQyNDkwNTU0Nzg2Nw.GNip_Q.WWG0k8U59N2MEQnmYplWr12_lon8N8zRPpAOL0\""
+container_env_vars_file = ".env.json"

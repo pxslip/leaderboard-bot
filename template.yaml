@@ -5,7 +5,7 @@ Description: A discord leaderboard/submission bot
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 5
 
 Parameters:
   ClientSecret:
@@ -22,39 +22,60 @@ Resources:
       CodeUri: ./
       Handler: invocation.handler
       Runtime: nodejs18.x
+      MemorySize: 256
       Environment:
         Variables:
           CLIENT_ID: '1080335424905547867'
           PUBLIC_KEY: 019df6dfc4e2f506284fb0e4c5474808d3e9cc16c2e3a6491359eb85d49f82c6
+          DB_TABLE_NAME: !Ref LeaderboardTable
           CLIENT_SECRET: !Ref ClientSecret
           DISCORD_TOKEN: !Ref DiscordToken
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LeaderboardTable
       Events:
         Invocation:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /invocations
             Method: post
+      Tracing: Active
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
         Target: 'es2020'
-        Sourcemap: true
+        Sourcemap: false
         EntryPoints:
           - src/invocation.ts
-  SubmissionsTable:
+  LeaderboardTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: 'LeaderboardBot_Leaderboards'
-      AttributeDefinitions:
-        - AttributeName: LeaderboardId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: LeaderboardId
-          KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+      AttributeDefinitions:
+      - AttributeName: LeaderboardId
+        AttributeType: N
+      - AttributeName: Timestamp
+        AttributeType: N
+      - AttributeName: GuildAndChannelId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: LeaderboardId
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: "guildAndChannel"
+        KeySchema:
+          - AttributeName: GuildAndChannelId
+            KeyType: HASH
+          - AttributeName: Timestamp
+            KeyType: RANGE
+        Projection:
+          ProjectionType: "ALL"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
