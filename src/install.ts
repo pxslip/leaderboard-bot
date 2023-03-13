@@ -2,6 +2,7 @@ import { readdir } from 'fs/promises';
 import { DiscordApi } from './discord.js';
 import { config } from 'dotenv';
 import { APIApplicationCommand, RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import sleep from './shared/sleep.js';
 config();
 
 if (process.env.DISCORD_TOKEN && process.env.CLIENT_ID && process.env.GUILD_IDS) {
@@ -39,6 +40,7 @@ if (process.env.DISCORD_TOKEN && process.env.CLIENT_ID && process.env.GUILD_IDS)
 					} catch (exc: any) {
 						console.error(JSON.stringify(exc.response.data));
 					}
+					await sleep(2000);
 				}
 			} else {
 				const commandData: APIApplicationCommand = (await api.createGlobalCommand(appId, command)).data;

@@ -34,12 +34,21 @@ export default function reviewMessageResponse({
 	const seconds = (parseInt(timestampMs) / 1000).toFixed();
 	let content = `${link} was submitted by <@${userId}> on <t:${seconds}:D> at <t:${seconds}:T>. They completed line ${line} on the ${color} board`;
 	let disableReject = false;
+	let disableAll = false;
 	if (action) {
 		const seconds = (action.timestampMS / 1000).toFixed();
 		switch (action.status) {
 			case 'confirmed':
+				disableAll = true;
+				content = content.concat(
+					`\n> This submission was confirmed by <@${action.userId}> on <t:${seconds}:D> at <t:${seconds}:T>.`,
+				);
 				break;
 			case 'deleted':
+				disableAll = true;
+				content = content.concat(
+					`\n> This submission was deleted by <@${action.userId}> on <t:${seconds}:D> at <t:${seconds}:T>.`,
+				);
 				break;
 			case 'rejected':
 				disableReject = true;
@@ -65,19 +74,21 @@ export default function reviewMessageResponse({
 							custom_id: `confirm_${leaderboardId}_${userId}_${timestampMs}`,
 							style: ButtonStyle.Success,
 							label: 'Confirm Submission',
+							disabled: disableAll,
 						},
 						{
 							type: ComponentType.Button,
 							custom_id: `reject_${leaderboardId}_${userId}_${timestampMs}`,
 							style: ButtonStyle.Secondary,
 							label: 'Reject Submission',
-							disabled: disableReject,
+							disabled: disableReject || disableAll,
 						},
 						{
 							type: ComponentType.Button,
 							custom_id: `delete_${leaderboardId}_${userId}_${timestampMs}`,
 							style: ButtonStyle.Danger,
 							label: 'Delete Submission',
+							disabled: disableAll,
 						},
 					],
 				},

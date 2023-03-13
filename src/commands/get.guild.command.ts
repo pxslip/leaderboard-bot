@@ -29,21 +29,33 @@ export async function handler(interaction: APIApplicationCommandInteraction): Pr
 	const channelId = getOptionValue<string>(interaction, 'channel') ?? interaction.channel_id;
 	if (guildId && channelId) {
 		const leaderboard = await getLeaderboard(guildId, channelId, {
-			ProjectionExpression: 'LeaderboardId, Entries, Name',
+			ProjectionExpression: 'LeaderboardId, Entries, #N',
+			ExpressionAttributeNames: { '#N': 'Name' },
 		});
 		const entries = leaderboard.Entries.L;
 		if (entries && entries.length > 0) {
-			const entriesText = entries?.reduce<string>((accumulator, current, index) => {
-				const row = `> ${index + 1}. ${current.M?.entrant.S} ${current.M?.time.S}`;
-				accumulator = `${accumulator}\n${row}`;
-				return accumulator;
-			}, '');
+			const entriesText = entries
+				?.sort((a, b) => {
+					const timeA = parseFloat(a.M?.Time.N ?? '0');
+					const timeB = parseFloat(b.M?.Time.N ?? '0');
+					return timeA - timeB;
+				})
+				.reduce<string>((accumulator, current, index) => {
+					const row = `> ${index + 1}. <@${current.M?.UserId.N}> completed ${current.M?.Line.S} on ${
+						current.M?.Color.S
+					} in ${current.M?.Time.N} seconds. `;
+					accumulator = `${accumulator}\n${row}`;
+					return accumulator;
+				}, '');
 			return {
 				statusCode: 200,
 				body: JSON.stringify({
 					type: InteractionResponseType.ChannelMessageWithSource,
 					data: {
 						content: `__**${leaderboard.Name.S}**__\n${entriesText}`,
+						allowed_mentions: {
+							parse: [],
+						},
 					},
 				} as APIInteractionResponseChannelMessageWithSource),
 			};

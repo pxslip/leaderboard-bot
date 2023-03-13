@@ -5,6 +5,8 @@ import {
 	PermissionFlagsBits,
 	ApplicationCommandOptionType,
 	InteractionResponseType,
+	APIInteractionResponseChannelMessageWithSource,
+	MessageFlags,
 } from 'discord-api-types/v10';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import getLeaderboard, { LeaderboardSubmissionItem } from '../shared/get-leaderboard.js';
@@ -27,28 +29,40 @@ export const command: RESTPostAPIChatInputApplicationCommandsJSONBody = {
 };
 
 export async function handler(interaction: APIApplicationCommandInteraction): Promise<APIGatewayProxyResult> {
-	console.log(JSON.stringify(interaction));
 	const guildId = interaction.guild_id;
 	const channelId = getOptionValue<string>(interaction, 'channel') ?? interaction.channel_id;
 	if (guildId && channelId) {
 		const leaderboard = await getLeaderboard(guildId, channelId, {
 			ProjectionExpression: 'LeaderboardId, Submissions',
 		});
-		const submission = await rotateSubmission(leaderboard);
-		if (submission) {
+		if (leaderboard.Submissions.L.length > 0) {
+			const submission = await rotateSubmission(leaderboard);
+			if (submission) {
+				return {
+					statusCode: 200,
+					body: JSON.stringify(
+						reviewMessageResponse({
+							leaderboardId: leaderboard.LeaderboardId.N,
+							link: submission.Link.S,
+							userId: submission.UserId.N,
+							timestampMs: submission.Timestamp.N,
+							line: submission.Line.S,
+							color: submission.Color.S,
+							type: InteractionResponseType.ChannelMessageWithSource,
+						}),
+					),
+				};
+			}
+		} else {
 			return {
 				statusCode: 200,
-				body: JSON.stringify(
-					reviewMessageResponse({
-						leaderboardId: leaderboard.LeaderboardId.N,
-						link: submission.Link.S,
-						userId: submission.UserId.N,
-						timestampMs: submission.Timestamp.N,
-						line: submission.Line.S,
-						color: submission.Color.S,
-						type: InteractionResponseType.ChannelMessageWithSource,
-					}),
-				),
+				body: JSON.stringify({
+					type: InteractionResponseType.ChannelMessageWithSource,
+					data: {
+						content: 'There are no submissions in the leaderboard associated with the given channel',
+						flags: MessageFlags.Ephemeral,
+					},
+				} as APIInteractionResponseChannelMessageWithSource),
 			};
 		}
 	}

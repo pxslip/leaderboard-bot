@@ -4,7 +4,6 @@ import {
 	APIModalSubmitInteraction,
 	ComponentType,
 	InteractionResponseType,
-	MessageFlags,
 } from 'discord-api-types/v10';
 import storeSubmission, { StoreSubmissionOptions } from '../shared/store-submission';
 
@@ -46,7 +45,10 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 				body: JSON.stringify({
 					type: InteractionResponseType.ChannelMessageWithSource,
 					data: {
-						content: `Submission received, a mod will review and confirm your entry`,
+						content: `<@${userId}> submitted ${submission.url}, they completed ${submission.line} on ${submission.color}`,
+						allowed_mentions: {
+							parse: [],
+						},
 					},
 				} as APIInteractionResponseChannelMessageWithSource),
 			};

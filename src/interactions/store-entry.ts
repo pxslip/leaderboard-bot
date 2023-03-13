@@ -1,7 +1,13 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
-import { APIMessageComponentInteraction, APIModalSubmitInteraction, ComponentType } from 'discord-api-types/v10';
+import {
+	APIMessageComponentInteraction,
+	APIModalSubmitInteraction,
+	ComponentType,
+	InteractionResponseType,
+} from 'discord-api-types/v10';
 import { getReviewCustomIdParts } from '../shared/get-custom-id-parts';
 import { getLeaderboardById } from '../shared/get-leaderboard';
+import reviewMessageResponse from '../shared/review-message';
 import storeEntry from '../shared/store-entry';
 import updateSubmissions from '../shared/update-submissions';
 
@@ -15,6 +21,7 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 		const leaderboard = await getLeaderboardById(leaderboardId, {
 			ProjectionExpression: 'LeaderboardId, Submissions',
 		});
+		console.log(leaderboard);
 		const submissions = leaderboard.Submissions.L;
 		if (submissions) {
 			const index = submissions.findIndex(({ M: submission }) => {
@@ -36,13 +43,13 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 										time += num * 60 * 60;
 									}
 									break;
-								case 'leaderboard_bot_board_color':
+								case 'entry_minutes':
 									num = parseInt(mComponent.value);
 									if (!isNaN(num)) {
 										time += num * 60;
 									}
 									break;
-								case 'leaderboard_bot_board_line':
+								case 'entry_seconds':
 									num = parseFloat(mComponent.value);
 									if (!isNaN(num)) {
 										time += num;
@@ -56,10 +63,33 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 				const color = submission.M?.Color.S;
 				const line = submission.M?.Line.S;
 				if (url && color && line) {
+					console.log(url);
 					const entryResponse = await storeEntry({ leaderboardId, userId: submitterId, url, color, line, time });
 					if (entryResponse.$metadata.httpStatusCode === 200) {
+						console.log(entryResponse);
 						// remove the submission from the list
-						updateSubmissions(leaderboardId, submissions);
+						const response = await updateSubmissions(leaderboardId, submissions);
+						if (response.$metadata.httpStatusCode === 200) {
+							return {
+								statusCode: 200,
+								body: JSON.stringify(
+									reviewMessageResponse({
+										leaderboardId: leaderboard.LeaderboardId.N,
+										link: url,
+										userId: submitterId,
+										timestampMs: timestamp,
+										line: line,
+										color: color,
+										type: InteractionResponseType.UpdateMessage,
+										action: {
+											status: 'confirmed',
+											userId: interaction.member?.user.id ?? '',
+											timestampMS: Date.now(),
+										},
+									}),
+								),
+							};
+						}
 					}
 				}
 			}

@@ -50,6 +50,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 				console.log(`Executing handler for modal ${body.data.custom_id}`);
 				if (body.data.custom_id === 'leaderboard_bot_submit_modal') {
 					return await interactions['storeSubmission'](body);
+				} else if (body.data.custom_id.startsWith('confirm-modal')) {
+					return await interactions.storeEntry(body);
 				}
 			} else if (body.type === InteractionType.MessageComponent) {
 				console.log(`Executing handler for ${body.data.custom_id}`);
@@ -70,6 +72,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 	} catch (exc) {
 		if (exc instanceof Error) {
 			console.error(exc.message);
+			console.error(exc.stack);
 		}
 	}
 	return {
