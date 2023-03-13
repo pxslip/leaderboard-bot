@@ -9,14 +9,12 @@ import {
 	MessageFlags,
 } from 'discord-api-types/v10';
 import { ApplicationCommandType } from 'discord-api-types/v10';
-import getLeaderboard, { LeaderboardSubmissionItem } from '../shared/get-leaderboard.js';
+import getLeaderboard from '../shared/get-leaderboard.js';
 import getOptionValue from '../shared/get-option-value.js';
-import reviewMessageResponse from '../shared/review-message.js';
-import rotateSubmission from '../shared/rotate-submission.js';
 
 export const command: RESTPostAPIChatInputApplicationCommandsJSONBody = {
-	name: 'review',
-	description: 'Get information for the oldest submission for review',
+	name: 'list-submissions',
+	description: 'Get a list of all submissions currently in the queue',
 	type: ApplicationCommandType.ChatInput,
 	default_member_permissions: PermissionFlagsBits.ManageChannels.toString(),
 	options: [
@@ -33,27 +31,33 @@ export async function handler(interaction: APIApplicationCommandInteraction): Pr
 	const channelId = getOptionValue<string>(interaction, 'channel') ?? interaction.channel_id;
 	if (guildId && channelId) {
 		const leaderboard = await getLeaderboard(guildId, channelId, {
-			ProjectionExpression: 'LeaderboardId, Submissions',
+			ProjectionExpression: 'LeaderboardId, Submissions, #N',
+			ExpressionAttributeNames: { '#N': 'Name' },
 		});
 		if (leaderboard.Submissions.L.length > 0) {
-			const submission = await rotateSubmission(leaderboard);
-			if (submission) {
-				return {
-					statusCode: 200,
-					body: JSON.stringify(
-						reviewMessageResponse({
-							leaderboardId: leaderboard.LeaderboardId.N,
-							link: submission.Link.S,
-							userId: submission.UserId.N,
-							timestampMs: submission.Timestamp.N,
-							line: submission.Line.S,
-							color: submission.Color.S,
-							account: submission.AccountName.S,
-							type: InteractionResponseType.ChannelMessageWithSource,
-						}),
-					),
-				};
-			}
+			const content = leaderboard.Submissions.L.reduce<string>((accumulator, current) => {
+				if (current.M) {
+					const { Timestamp, UserId, Link } = current.M;
+					if (Timestamp.N && UserId.N && Link.S) {
+						const seconds = (parseInt(Timestamp.N) / 1000).toFixed();
+						accumulator += `> <@${UserId.N}> submitted ${Link.S} on <t:${seconds}:D> at <t:${seconds}:T>\n`;
+						return accumulator;
+					}
+				}
+				return accumulator;
+			}, `${leaderboard.Name.S} submission queue\n`);
+			return {
+				statusCode: 200,
+				body: JSON.stringify({
+					type: InteractionResponseType.ChannelMessageWithSource,
+					data: {
+						content,
+						allowed_mentions: {
+							parse: [],
+						},
+					},
+				} as APIInteractionResponseChannelMessageWithSource),
+			};
 		} else {
 			return {
 				statusCode: 200,

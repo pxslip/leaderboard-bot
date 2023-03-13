@@ -41,6 +41,7 @@ export async function handler(interaction: APIMessageComponentInteraction): Prom
 									line: submission.Line.S,
 									color: submission.Color.S,
 									type: InteractionResponseType.UpdateMessage,
+									account: submission.AccountName.S,
 									action: {
 										status: 'deleted',
 										timestampMS: Date.now(),

@@ -26,6 +26,7 @@ export const command: RESTPostAPIChatInputApplicationCommandsJSONBody = {
 			type: ApplicationCommandOptionType.Channel,
 			name: 'channel',
 			description: 'The channel to proxy commands to',
+			required: true,
 		},
 	],
 };

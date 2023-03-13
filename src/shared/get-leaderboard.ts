@@ -25,6 +25,7 @@ export interface LeaderboardSubmissionItem {
 	Timestamp: AttributeValue.NMember;
 	Color: AttributeValue.SMember;
 	Line: AttributeValue.SMember;
+	AccountName: AttributeValue.SMember;
 }
 
 interface GetLeaderboardOptions {

@@ -20,6 +20,7 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 			url: '',
 			color: '',
 			line: '',
+			account: '',
 		};
 		interaction.data.components.forEach((component) => {
 			if (component.type === ComponentType.ActionRow) {
@@ -33,6 +34,9 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 							break;
 						case 'leaderboard_bot_board_line':
 							submission.line = mComponent.value;
+							break;
+						case 'leaderboard_bot_poe_profile':
+							submission.account = mComponent.value;
 							break;
 					}
 				});

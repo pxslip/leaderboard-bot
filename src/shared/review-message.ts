@@ -13,6 +13,7 @@ export interface ReviewMessageResponseOptions {
 	timestampMs: string;
 	line: string;
 	color: string;
+	account: string;
 	type: InteractionResponseType.ChannelMessageWithSource | InteractionResponseType.UpdateMessage;
 	action?: {
 		status: 'confirmed' | 'deleted' | 'rejected';
@@ -28,11 +29,12 @@ export default function reviewMessageResponse({
 	timestampMs,
 	line,
 	color,
+	account,
 	type,
 	action,
 }: ReviewMessageResponseOptions): APIInteractionResponseChannelMessageWithSource | APIInteractionResponseUpdateMessage {
 	const seconds = (parseInt(timestampMs) / 1000).toFixed();
-	let content = `${link} was submitted by <@${userId}> on <t:${seconds}:D> at <t:${seconds}:T>. They completed line ${line} on the ${color} board`;
+	let content = `${link} was submitted by <@${userId}> on <t:${seconds}:D> at <t:${seconds}:T>. They completed line ${line} on the ${color} board\nPoE Profile at https://www.pathofexile.com/account/view-profile/${account}`;
 	let disableReject = false;
 	let disableAll = false;
 	if (action) {

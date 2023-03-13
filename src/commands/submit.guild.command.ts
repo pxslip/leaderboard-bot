@@ -62,6 +62,19 @@ export async function handler(interaction: APIApplicationCommandInteraction): Pr
 							},
 						],
 					},
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								type: ComponentType.TextInput,
+								custom_id: 'leaderboard_bot_poe_profile',
+								label: 'PoE Account Name',
+								style: TextInputStyle.Short,
+								required: true,
+								placeholder: 'YourAwesomePoEAccountNameHere',
+							},
+						],
+					},
 				],
 			},
 		} as APIModalInteractionResponse),

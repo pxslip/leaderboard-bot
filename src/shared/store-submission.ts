@@ -9,6 +9,7 @@ export interface StoreSubmissionOptions {
 	userId: string;
 	color: string;
 	line: string;
+	account: string;
 }
 
 export default async function storeSubmission({
@@ -18,6 +19,7 @@ export default async function storeSubmission({
 	url,
 	color,
 	line,
+	account,
 }: StoreSubmissionOptions) {
 	const leaderboard = await getLeaderboard(guildId, channelId, { ProjectionExpression: 'LeaderboardId, Submissions' });
 	const submissions = leaderboard.Submissions.L;
@@ -37,6 +39,7 @@ export default async function storeSubmission({
 									Timestamp: { N: Date.now().toString() },
 									Color: { S: color },
 									Line: { S: line },
+									AccountName: { S: account },
 								},
 							},
 						],
