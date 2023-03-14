@@ -24,6 +24,28 @@ export const command: RESTPostAPIChatInputApplicationCommandsJSONBody = {
 	],
 };
 
+export const secondsToReadable = (timeIn: string) => {
+	let timeString = 'unknown';
+	const time = parseFloat(timeIn ?? 'NaN');
+	if (!isNaN(time)) {
+		const hrs = Math.floor(time / 3600);
+		const minutes = Math.floor((time - hrs / 3600) / 60);
+		const seconds = time - hrs * 3600 - minutes * 60;
+		if (!!hrs && hrs > 0) {
+			if (!!minutes && minutes > 0) {
+				timeString = `${hrs}h ${minutes}m ${seconds}s`;
+			} else {
+				timeString = `${hrs}h ${seconds}s`;
+			}
+		}
+		if (!!minutes && minutes > 0) {
+			timeString = `${minutes}m ${seconds}s`;
+		}
+		timeString = `${seconds}s`;
+	}
+	return timeString;
+};
+
 export async function handler(interaction: APIApplicationCommandInteraction): Promise<APIGatewayProxyResult> {
 	const guildId = interaction.guild_id;
 	const channelId = getOptionValue<string>(interaction, 'channel') ?? interaction.channel_id;
@@ -43,7 +65,7 @@ export async function handler(interaction: APIApplicationCommandInteraction): Pr
 				.reduce<string>((accumulator, current, index) => {
 					const row = `> ${index + 1}. <@${current.M?.UserId.N}> completed ${current.M?.Line.S} on ${
 						current.M?.Color.S
-					} in ${current.M?.Time.N} seconds. `;
+					} in ${secondsToReadable(current.M?.Time.N ?? 'unknown')} seconds. `;
 					accumulator = `${accumulator}\n${row}`;
 					return accumulator;
 				}, '');

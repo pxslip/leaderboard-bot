@@ -49,7 +49,7 @@ export async function handler(interaction: APIApplicationCommandInteraction): Pr
 			ProjectionExpression: 'LeaderboardId, #N',
 			ExpressionAttributeNames: { '#N': 'Name' },
 		});
-		const newLeaderboardId = targetLeaderboard.LeaderboardId?.N;
+		const newLeaderboardId = leaderboard.LeaderboardId?.N;
 		if (newLeaderboardId) {
 			const response = await dbClient.send(
 				new UpdateItemCommand({
@@ -61,10 +61,11 @@ export async function handler(interaction: APIApplicationCommandInteraction): Pr
 					},
 					TableName: TABLE_NAME,
 					UpdateExpression:
-						'SET TargetLeaderboardId = :tli, GuildId = :gi, ChannelId = :ci, GuildAndChannelId = :gci, Timestamp = :ts',
+						'SET TargetLeaderboardId = :tli, GuildId = :gi, ChannelId = :ci, GuildAndChannelId = :gci, #T = :ts',
+					ExpressionAttributeNames: { '#T': 'Timestamp' },
 					ExpressionAttributeValues: {
 						':tli': {
-							N: newLeaderboardId,
+							N: targetLeaderboard.LeaderboardId.N,
 						},
 						':gi': {
 							N: guildId,

@@ -49,7 +49,7 @@ export async function handler(interaction: APIModalSubmitInteraction): Promise<A
 				body: JSON.stringify({
 					type: InteractionResponseType.ChannelMessageWithSource,
 					data: {
-						content: `<@${userId}> submitted ${submission.url}, they completed ${submission.line} on ${submission.color}`,
+						content: `<@${userId}> submitted ${submission.url}, they completed ${submission.line} on ${submission.color}. PoE profile is ${submission.account}`,
 						allowed_mentions: {
 							parse: [],
 						},
